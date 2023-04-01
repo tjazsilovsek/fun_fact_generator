@@ -1,9 +1,7 @@
-from typing import List, Tuple
-
 import openai
 
 
-def parse_prompt(text: str) -> List[Tuple[str, str]]:
+def parse_prompt(text: str) -> list[tuple[str, str]]:
     parsed_list = []
     data = text.split('\n\n')
     for d in data:
@@ -16,7 +14,7 @@ def parse_prompt(text: str) -> List[Tuple[str, str]]:
     return parsed_list
 
 
-def generate_prompt(prompt: str) -> List[Tuple[str, str]]:
+def generate_prompt(prompt: str) -> list[tuple[str, str]]:
     system_message = "You are content creator now.\n \
         Try to be humorous and creative.\n \
         You will recieve a prompt to generate a list of items with some properties.\n \
