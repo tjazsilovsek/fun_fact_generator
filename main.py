@@ -9,7 +9,10 @@ from speech import text_to_speech
 load_dotenv()
 
 
-def generate_audio(descriptions: list[str]):
+def generate_audio(descriptions: list[str], duration: int = 5):
+
+    silent_audio = AudioClip(
+        lambda t: 0, duration=duration)
 
     lenghts_in_seconds = []
     files = []
@@ -18,17 +21,22 @@ def generate_audio(descriptions: list[str]):
         file, lenght_in_seconds = text_to_speech(descriptions[i])
         lenghts_in_seconds.append(lenght_in_seconds)
         files.append(file)
-        print("Audio generated", file)
-        print("Audio lenght", lenght_in_seconds)
 
-    # Join audio files
-    transcript_sound_file = concatenate_audioclips(
-        [AudioFileClip(f) for f in files])
+    # Join audio files, add silence between them
+    audioFiles = [AudioFileClip(f) for f in files]
+    withSilence = [audioFiles[0]]
+    for i in range(1, len(audioFiles)):
+        withSilence.append(silent_audio)
+        withSilence.append(audioFiles[i])
 
-    background_sound_file = "content/static/track.wav"
+    transcript_sound_file = concatenate_audioclips(withSilence)
+
+    background_sound_file = "content/static/background.wav"
 
     # Load background sound
     backgroundAudio = AudioFileClip(background_sound_file)
+    # lower the volume of background sound
+    backgroundAudio = backgroundAudio.volumex(0.2)
 
     # Concatenate background and transcript sounds
     # Mix background and transcript sounds
@@ -71,6 +79,8 @@ def main():
 
     # get content from openai api
     content = generate_prompt(prompt)
+    # content = [('1. Blue whale', 'The blue whale has the largest penis of any animal. It is typically 12–16 metres long, but has been known to grow to lengths of 33 metres.'), ('2. Elephant', 'The elephant has the second largest penis of any land animal. The penis is typically 6–7 metres long and 1.5 metres in diameter.'), ('3. Giraffe',
+   #                                                                                                                                                                                                                                                                                                                                   'The giraffe has the third largest penis of any land animal. The penis is typically 4–5 metres long and 0.5 metres in diameter.'), ('4. Rhinoceros', 'The rhinoceros has the fourth largest penis of any land animal. The penis is typically 3–4 metres long and 0.5 metres in diameter.'), ('5. Hippopotamus', 'The hippopotamus has the fifth largest penis of any land animal. The penis is typically 2–3 metres long and 0.5 metres in diameter.')]
 
     print(content)
     # ask user if they want to continue
@@ -82,11 +92,14 @@ def main():
     descriptions = list(map(lambda x: x[1].strip(), content))
 
     # add intro text
-    intro_text = f"Here we are, lets get blown by stuff. Heheheh!"
+    intro_text = f"Here we are, lets get blown by stuff!"
     descriptions.insert(0, intro_text)
 
+    transition_time = 2
+
     # generate audio
-    finalAudio, section_durations = generate_audio(descriptions)
+    finalAudio, section_durations = generate_audio(
+        descriptions, transition_time)
 
     # get images from unsplash api
     image_files = generate_images(names)
@@ -101,7 +114,7 @@ def main():
 
     # Add start image
     start_image = ImageClip(
-        "content/static/blown.jpeg").set_duration(section_durations[0])
+        "content/static/blown.jpeg").resize(image_size).set_duration(section_durations[0])
 
     # Add start text
     start_text = TextClip(f"Are you ready to get blown?", fontsize=50, color='white', bg_color='black', size=(
@@ -115,16 +128,16 @@ def main():
 
         # Load wait image
         wait_img = ImageClip("content/static/wait.jpg").resize(
-            image_size).set_duration(duration_per_image / 2)
+            image_size).set_duration(transition_time)
 
         # Add consecutive number
-        num_clip = TextClip(f"Number {index}", fontsize=50, color='white', bg_color='black', size=(
-            200, 70)).set_duration(duration_per_image / 2)
+        num_clip = TextClip(f"Number {index}!", fontsize=50, color='white', bg_color='black', size=(
+            300, 80)).set_duration(transition_time+duration_per_image)
         num_clip = num_clip.set_position(("center", "center")).set_opacity(0.5)
 
         # Load image and resize
-        img_clip = ImageClip(img).set_duration(
-            duration_per_image / 2).set_start(duration_per_image / 2)
+        img_clip = ImageClip(img).resize(image_size).set_duration(
+            duration_per_image).set_start(transition_time)
 
         img_with_caption = CompositeVideoClip(
             [wait_img, img_clip, num_clip])

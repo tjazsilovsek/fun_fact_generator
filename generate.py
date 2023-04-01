@@ -1,4 +1,5 @@
 import openai
+import os
 
 
 def parse_prompt(text: str) -> list[tuple[str, str]]:
@@ -15,6 +16,8 @@ def parse_prompt(text: str) -> list[tuple[str, str]]:
 
 
 def generate_prompt(prompt: str) -> list[tuple[str, str]]:
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+
     system_message = "You are content creator now.\n \
         Try to be humorous and creative.\n \
         You will recieve a prompt to generate a list of items with some properties.\n \

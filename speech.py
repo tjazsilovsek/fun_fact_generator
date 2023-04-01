@@ -1,6 +1,8 @@
 from datetime import datetime
 import io
+import random
 import boto3
+import os
 from pydub import AudioSegment
 
 
@@ -12,14 +14,9 @@ def text_to_speech(text, pause_duration="1s"):
         region_name="eu-west-1"
     ).client("polly")
 
-    # Insert a pause between each sentence
-    sentences = text.split(". ")
+    text = text.strip()
 
-    # filter out empty sentences or sentences with only spaces
-    sentences = list(filter(lambda x: x.strip(), sentences))
-
-    ssml_text = '<speak>' + \
-        f'<break time="{pause_duration}"/>'.join(sentences) + '</speak>'
+    ssml_text = f'<speak><break time="{pause_duration}"/>{text}</speak>'
 
     response = polly_client.synthesize_speech(
         Text=ssml_text,
@@ -35,11 +32,14 @@ def text_to_speech(text, pause_duration="1s"):
                                        channels=1, frame_rate=16000)
 
     # get length of audio file in seconds
-    file_lenght = (len(pcm_audio) / 1000)
+    file_lenght = round(len(pcm_audio) / 1000)
+
+    # random index for file name
+    idx = random.randint(0, 1000)
 
     # Generate the output file name using the current timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = 'content/download/output_{}.wav'.format(timestamp)
+    output_file = 'content/download/output_{}_{}.wav'.format(timestamp, idx)
 
     # Export the audio data to a WAV file using the export method
     pcm_audio.export(output_file, format='wav')
