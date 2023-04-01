@@ -1,27 +1,43 @@
 import requests
 import os
+import json
 
 
-def get_random_image(query: str) -> str:
+def get_image(query: str) -> str:
+    # Set up the API endpoint URL
+    url = "https://api.unsplash.com/search/photos"
+
+    # Set up the query parameters
+    params = {
+        "query": query,
+        "per_page": 1,
+    }
     key = os.getenv("UNSPLASH_API_KEY")
-    url = "https://api.unsplash.com/photos/random"
-    headers = {"Authorization": f"Client-ID {key}"}
-    params = {"query": query}
 
+    # Set up the API headers
+    headers = {
+        "Authorization": f"Client-ID {key}"
+    }
+
+    # Send the API request
     response = requests.get(url, headers=headers, params=params)
 
-    if response.status_code == 200:
-        json_response = response.json()
-        return json_response["urls"]["regular"]
-    else:
-        print(f"Error getting random image: {response.status_code}")
+    # Parse the response JSON
+    data = json.loads(response.text)
+
+    # Get the first image URL from the response
+    image_url = data["results"][0]["urls"]["raw"]
+
+    # Download the image and save it to a file
+    response = requests.get(image_url)
+
+    if response.status_code != 200:
+        print(f"Failed to download image {image_url}.")
         return None
 
+    image_path = f"content/download/{query}.jpg"
 
-def download_image(url: str, filename: str) -> None:
-    response = requests.get(url)
-    if response.status_code == 200:
-        with open(filename, "wb") as f:
-            f.write(response.content)
-    else:
-        print(f"Error downloading image: {response.status_code}")
+    with open(image_path, "wb") as f:
+        f.write(response.content)
+
+    return image_path

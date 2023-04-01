@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from moviepy.editor import *
 from generate import generate_prompt
 
-from image import download_image, get_random_image
+from image import get_image
 from speech import text_to_speech
 
 # Load environment variables from .env file
@@ -23,6 +23,8 @@ def generate_audio(descriptions: list[str], duration: int = 5):
         files.append(file)
 
     # Join audio files, add silence between them
+    # reverse the list so that the first audio file is at the end
+    files.reverse()
     audioFiles = [AudioFileClip(f) for f in files]
     withSilence = [audioFiles[0]]
     for i in range(1, len(audioFiles)):
@@ -56,11 +58,9 @@ def generate_images(names):
     # generate images
     image_files = []
     for i in range(len(names)):
-        image_url = get_random_image(names[i])
+        image_url = get_image(names[i])
         if image_url:
-            filename = f"content/download/image{i + 1}.jpg"
-            download_image(image_url, filename)
-            image_files.append(filename)
+            image_files.append(image_url)
         else:
             print("Error getting image url, exiting...")
             return
@@ -89,7 +89,7 @@ def main():
         return
 
     names = list(map(lambda x: x[0].strip(), content))
-    descriptions = list(map(lambda x: x[1].strip(), content))
+    descriptions = list(map(lambda x: f"{x[0]} {x[1]}".strip(), content))
 
     # add intro text
     intro_text = f"Here we are, lets get blown by stuff!"
