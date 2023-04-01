@@ -7,8 +7,8 @@ from pydub import AudioSegment
 def text_to_speech(text, pause_duration="1s"):
 
     polly_client = boto3.Session(
-        aws_access_key_id="AKIAUWIH62LHSMHLHX2X",
-        aws_secret_access_key="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",
+        aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
         region_name="eu-west-1"
     ).client("polly")
 
